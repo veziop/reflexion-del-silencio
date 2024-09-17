@@ -19,5 +19,5 @@ repos:
           '--check',
           '--line-length', '96',
           '--profile', 'black', 
-          '--src-path', 'backend'
+          '--src-path', 'api'
           ]

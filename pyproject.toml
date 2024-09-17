@@ -5,5 +5,6 @@ target-version = ['py311']
 [tool.isort]
 profile = 'black'
 line_length = 96
-src_paths = ['backend']
+src_paths = ['api']
+known_third_party = ['flask', 'Flask']
 py_version = '311'
