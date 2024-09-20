@@ -6,13 +6,11 @@ COPY ./requirements.txt /code/requirements.txt
 
 RUN  pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-COPY ./api /code/api
+COPY . /code/api
 
 ENV TIMEZONE="Europe/Madrid"
 
 RUN mkdir -p /code/data
-
-VOLUME /code/data
 
 EXPOSE 8080
 
