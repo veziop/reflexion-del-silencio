@@ -1,15 +1,16 @@
-import os
 import sqlite3
+from contextlib import contextmanager
 
 import pandas as pd
 
-DATABASE_NAME = os.getenv("DATABASE_NAME", "data/rds-datos.db")
+from api.config import config
 
 
+@contextmanager
 def connexion_db():
-    conexion = sqlite3.connect(DATABASE_NAME)
+    conexion = sqlite3.connect(config.DATABASE_URI)
     conexion.row_factory = sqlite3.Row
-    return conexion
+    yield conexion
 
 
 def crear_tablas():
@@ -33,24 +34,25 @@ def crear_tablas():
         )
     """
     tablas = [capitulo, lectura]
-    db = connexion_db()
-    cursor = db.cursor()
-    for tabla in tablas:
-        cursor.execute(tabla)
+    with connexion_db() as db:
+        cursor = db.cursor()
+        for tabla in tablas:
+            cursor.execute(tabla)
+            db.commit()
 
-    if not tabla_tiene_registros("capitulo"):
-        capitulos = pd.read_csv(
-            "api/capitulo.csv", index_col=False, parse_dates=["ultima_lectura"]
-        )
-        capitulos.to_sql("capitulo", db, if_exists="replace", index=False)
+        if not tabla_tiene_registros("capitulo"):
+            capitulos = pd.read_csv(
+                "api/capitulo.csv", index_col=False, parse_dates=["ultima_lectura"]
+            )
+            capitulos.to_sql("capitulo", db, if_exists="replace", index=False)
 
-    # lecturas = pd.read_csv("api/debug-lectura.csv", index_col=False, parse_dates=["fecha"])
-    # lecturas.to_sql("lectura", db, if_exists="replace", index=False)
+        # lecturas = pd.read_csv("api/debug-lectura.csv", index_col=False, parse_dates=["fecha"])
+        # lecturas.to_sql("lectura", db, if_exists="replace", index=False)
 
 
 def tabla_tiene_registros(tabla: str) -> bool:
     comando = f"SELECT EXISTS (SELECT 1 FROM {tabla})"
-    db = connexion_db()
-    cursor = db.cursor()
-    cursor.execute(comando)
-    return next(iter(dict(cursor.fetchone()).values()))
+    with connexion_db() as db:
+        cursor = db.cursor()
+        cursor.execute(comando)
+        return next(iter(dict(cursor.fetchone()).values()))
